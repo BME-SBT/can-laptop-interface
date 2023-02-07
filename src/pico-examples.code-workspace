@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "../../../../../pico/pico-examples"
+		},
+		{
+			"name": "221114-103404-arduino-blink",
+			"path": "../../221114-103404-arduino-blink"
+		},
+		{
+			"name": "CAN",
+			"path": "../../CAN"
+		},
+		{
+			"name": "serial",
+			"path": ".."
+		}
+	],
+	"settings": {}
+}
