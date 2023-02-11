@@ -80,13 +80,27 @@ void sendTestMassage2() {
   CAN.endPacket();
 }
 
+void sendTestMessage3() {
+  CAN.beginExtendedPacket(0x24);
+  CAN.write('D');
+  CAN.write('I');
+  CAN.write('K');
+  CAN.write('K');
+  CAN.write('K');
+  CAN.endPacket();
+}
+
 void canBusMonitor() {
   while(Serial.readString() != "exit") {
     sendTestMassage1();
     canRecieve();
+    delay(200);
     sendTestMassage2();
     canRecieve();
-    delay(1000);
+    delay(200);
+    sendTestMessage3();
+    canRecieve();
+    delay(200);
   }
 }
 
