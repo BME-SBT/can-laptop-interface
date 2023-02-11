@@ -19,6 +19,8 @@ void setup() {
     Serial.println("Starting CAN failed!");
     while (1);
   }
+
+  CAN.loopback();
 }
 
 void canRecieve() {
@@ -54,12 +56,37 @@ void canRecieve() {
   } 
 }
 
-void canBusMonitor() {
-  String msg = "OK";
+void canSendMsg() {
 
-  while(msg == "OK") {
+}
+
+void sendTestMassage1() {
+  CAN.beginPacket(0x12);
+  CAN.write('h');
+  CAN.write('e');
+  CAN.write('l');
+  CAN.write('l');
+  CAN.write('o');
+  CAN.endPacket();
+}
+
+void sendTestMassage2() {
+  CAN.beginExtendedPacket(0xabcdef);
+  CAN.write('w');
+  CAN.write('o');
+  CAN.write('r');
+  CAN.write('l');
+  CAN.write('d');
+  CAN.endPacket();
+}
+
+void canBusMonitor() {
+  while(Serial.readString() != "exit") {
+    sendTestMassage1();
     canRecieve();
-    msg = Serial.readString();
+    sendTestMassage2();
+    canRecieve();
+    delay(1000);
   }
 }
 
@@ -71,5 +98,7 @@ void loop() {
 
   if(msg == "monitor") {
     canBusMonitor();
+  } else if(msg = "send") {
+    canSendMsg();
   }
 }
