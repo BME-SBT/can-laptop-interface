@@ -7,16 +7,15 @@ void setup() {
   Serial.begin(115200);
   while (!Serial);
 
-  Serial.println("CAN Reciever");
   SPI = MbedSPI(16,19,18);
   CAN.setClockFrequency(8E6);
-  CAN.setSPIFrequency(2500000);
+  CAN.setSPIFrequency(250E4);
   CAN.setPins(17);
   
 
   // start the CAN bus at 500 kbps
   if (!CAN.begin(250E3)) {
-    Serial.println("Starting CAN failed!");
+    Serial.println("400");
     while (1);
   }
 
@@ -42,17 +41,22 @@ void canRecieve() {
       Serial.print("0");
     }
 
+    // Padding after the can ID for unequivocally decodable messages
+    Serial.print(" ");
     Serial.print(CAN.packetId(), HEX);
+    Serial.print(" ");
 
     if (CAN.packetRtr()) {
       Serial.println(CAN.packetDlc());
     } else {
       Serial.print(packetSize);
+      Serial.print(" ");
       while (CAN.available()) {
         Serial.print((char)CAN.read());
       }
-      Serial.println();
     }
+
+    Serial.println();
   } 
 }
 
@@ -90,17 +94,22 @@ void sendTestMessage3() {
   CAN.endPacket();
 }
 
+void canTest() {
+  sendTestMassage1();
+  canRecieve();
+  delay(200);
+  sendTestMassage2();
+  canRecieve();
+  delay(200);
+  sendTestMessage3();
+  canRecieve();
+  delay(200);
+}
+
 void canBusMonitor() {
   while(Serial.readString() != "exit") {
-    sendTestMassage1();
     canRecieve();
-    delay(200);
-    sendTestMassage2();
-    canRecieve();
-    delay(200);
-    sendTestMessage3();
-    canRecieve();
-    delay(200);
+    // canTest();
   }
 }
 
