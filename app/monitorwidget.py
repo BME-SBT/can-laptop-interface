@@ -12,7 +12,7 @@ class MonitorWidget(QWidget):
 
         QWidget.__init__(self)
 
-        app = app
+        self.app = app
         
         monitor_layout = QVBoxLayout()
 
