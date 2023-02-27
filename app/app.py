@@ -3,7 +3,7 @@ from PySide6.QtWidgets import *
 from PySide6.QtGui import *
 from PySide6.QtCore import *
 from scrolllabel import ScrollLabel
-from monitor_layout import MonitorWidget
+from monitorwidget import MonitorWidget
 import sys
 import serial
 from datetime import datetime
