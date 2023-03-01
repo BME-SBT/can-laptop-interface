@@ -13,7 +13,7 @@ void setup() {
   CAN.setPins(17);
   
 
-  // start the CAN bus at 500 kbps
+  // start the CAN bus at 250 kbps
   if (!CAN.begin(250E3)) {
     Serial.println("400");
     while (1);
