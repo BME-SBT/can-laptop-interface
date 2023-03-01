@@ -29,7 +29,10 @@ class SendWidget(QWidget):
         # self.list_id.setEchoMode(QLineEdit.NoEcho)
         label_message = QLabel("Message: ")
         self.lineedit_message = QLineEdit()
-        self.lineedit_message.setEchoMode(QLineEdit.NoEcho)
+        #self.lineedit_message.setEchoMode(QLineEdit.NoEcho)
+
+        self.check_extended = QCheckBox("extended")
+        self.check_rtr = QCheckBox("RTR")
 
         # Initialization of the label showcasing the messages
         self.sent_messages = "Sent messages:\n\n"
@@ -61,6 +64,8 @@ class SendWidget(QWidget):
         send_layout.addWidget(btn_port)
         send_layout.addWidget(label_id)
         send_layout.addWidget(self.combo_id)
+        send_layout.addWidget(self.check_extended)
+        send_layout.addWidget(self.check_rtr)
         send_layout.addWidget(label_message)
         send_layout.addWidget(self.lineedit_message)
         send_layout.addWidget(self.scrolllabel)
