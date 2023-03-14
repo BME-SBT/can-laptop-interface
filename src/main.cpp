@@ -11,7 +11,6 @@ void setup() {
   CAN.setClockFrequency(8E6);
   CAN.setSPIFrequency(250E4);
   CAN.setPins(17);
-  
 
   // start the CAN bus at 250 kbps
   if (!CAN.begin(250E3)) {
