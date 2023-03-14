@@ -34,6 +34,9 @@ class SendWidget(QWidget):
         self.check_extended = QCheckBox("extended")
         self.check_rtr = QCheckBox("RTR")
 
+        self.btn_send = QPushButton("SEND")
+        self.btn_send.clicked.connect(self.send_pushed)
+
         # Initialization of the label showcasing the messages
         self.sent_messages = "Sent messages:\n\n"
         self.label_received_messages = QLabel(self.sent_messages)
@@ -68,6 +71,7 @@ class SendWidget(QWidget):
         send_layout.addWidget(self.check_rtr)
         send_layout.addWidget(label_message)
         send_layout.addWidget(self.lineedit_message)
+        send_layout.addWidget(self.btn_send)
         send_layout.addWidget(self.scrolllabel)
         send_layout.addWidget(self.btn_back)
         send_layout.addWidget(self.label_error)
@@ -93,6 +97,10 @@ class SendWidget(QWidget):
 
     def back_pushed(self):
         self.app.main_layout.setCurrentIndex(0)
+
+    def send_pushed(self):
+        #TODO
+        pass
 
     def UiComponents(self): 
         # creating scroll label
