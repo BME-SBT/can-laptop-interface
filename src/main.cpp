@@ -72,14 +72,14 @@ void canSendMsg() {
   {
     if(msg[i]=='-'|| i == msg.length())
     {
-				split[currIndex] = substring;
-				currIndex++;
-				substring = "";
+	split[currIndex] = substring;
+	currIndex++;
+	substring = "";
     }
     else
     {
-			substring = substring + msg[i];
-		}
+	substring = substring + msg[i];
+    }
   }
 
   int packetID = split[0].toInt();
