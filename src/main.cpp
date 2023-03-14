@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #include <CAN.h>
+#include <string>
 
 void setup() {
   Serial.begin(115200);
@@ -62,6 +63,47 @@ void canRecieve() {
 
 void canSendMsg() {
 
+  String msg = Serial.readString(); // ID-extended-RTR-message
+
+  String split[4];
+  String substring = "";
+  int currIndex = 0; 
+
+  for(unsigned int i=0; i <=msg.length();i++)
+  {
+    if(msg[i]=='-'|| i == msg.length())
+    {
+				split[currIndex] = substring;
+				currIndex++;
+				substring = "";
+    }
+    else
+    {
+			substring = substring + msg[i];
+		}
+  }
+
+  int packetID = split[0].toInt();
+  int Extended = split[1].toInt();
+  int RTR = split[2].toInt();
+  String message = split[4];
+
+  if(Extended == 0)
+  {
+      CAN.beginPacket(packetID,8,RTR);
+      for(unsigned int i=0; i < message.length();i++){
+          CAN.write(message[i]);
+      }
+      CAN.endPacket();
+  }
+  else if(Extended == 1)
+  {
+      CAN.beginExtendedPacket(packetID,8,RTR);
+      for(unsigned int i=0; i < message.length();i++){
+          CAN.write(message[i]);
+        }
+      CAN.endPacket();
+  }
 }
 
 void sendTestMassage1() {
