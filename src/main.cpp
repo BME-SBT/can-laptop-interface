@@ -21,7 +21,7 @@ void setup() {
   CAN.setClockFrequency(CAN_CKFR);
   CAN.setSPIFrequency(CAN_SPIFR);
   CAN.setPins(CS);
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT); // for testing
 
   // start the CAN bus at 250 kbps
   if (!CAN.begin(250E3)) {
@@ -70,20 +70,12 @@ void canRecieve() {
   } 
 }
 
-void canSendPacket(String msg) {
+void canSendPacket() {
   String split[4];
-  String substring = "";
-  int currIndex = 0; 
 
   // Split the message by the '-' characters
-  for(unsigned int i = 0; i < msg.length(); i++){
-    if(msg[i] == delimiter || i == msg.length()){
-	    split[currIndex] = substring;
-	    currIndex++;
-	    substring = "";
-    }else{
-	    substring = substring + msg[i];
-    }
+  for(unsigned int i = 0; i < 4; i++){
+    split[i] = Serial.readStringUntil(delimiter);
   }
 
   int packetID = split[0].toInt();
@@ -104,6 +96,9 @@ void canSendPacket(String msg) {
       }
     CAN.endPacket();
   }
+  // digitalWrite(LED_BUILTIN, HIGH); teszteléshez
+  // delay(100);
+  // digitalWrite(LED_BUILTIN, LOW);
 }
 
 void sendTestMassage1() {
@@ -165,8 +160,7 @@ void loop() {
     if(msg == "monitor") {
       canBusMonitor();
     } else if(msg = "send") {
-      String packet = Serial.readString();
-      canSendPacket(packet);
+      canSendPacket();
     }
   }
 }
