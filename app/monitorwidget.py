@@ -27,10 +27,6 @@ class MonitorWidget(QWidget):
 
         # Initialization of the label showcasing the messages
         self.received_messages = "Recieved messages:\n\n"
-        self.label_received_messages = QLabel(self.received_messages)
-        self.label_received_messages.setWordWrap(True)
-        self.label_received_messages.setMinimumHeight(600)
-        self.label_received_messages.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         
         # Initialize the scrollable label
         self.scrolllabel = ScrollLabel(self)
@@ -110,21 +106,21 @@ class MonitorWidget(QWidget):
         self.label_error.hide()
         
     def monitoring(self):
-        if(self.monitor_running == True):
-            now = datetime.now()
-            current_time = now.strftime("%H:%M:%S")
-            new_message = current_time + ' ' + self.message_reader() + '\n'
-            self.received_messages += new_message
-            self.scrolllabel.setText(self.received_messages)
+        if self.monitor_running == True:
+            if self.ser.in_waiting:
+                now = datetime.now()
+                current_time = now.strftime("%H:%M:%S")
+                new_message = current_time + ' ' + self.message_reader() + '\n'
+                self.received_messages += new_message
+                self.scrolllabel.setText(self.received_messages)
     
     def back_pushed(self):
         self.app.main_layout.setCurrentIndex(0)
         self.received_messages = "Recieved messages:\n\n"
         self.scrolllabel.setText(self.received_messages)
-        try:
-            self.ser.write('exit'.encode('utf-8'))
-        except:
-            pass
+        self.ser.write('exit'.encode('utf-8'))
+        self.ser.close()
+        self.ser = None
         self.monitor_running = False
 
     def UiComponents(self): 

@@ -11,6 +11,8 @@
 #define CAN_CKFR 8E6 // Can clock frequency
 #define CAN_SPIFR 250E4 // Can SPI frequency
 
+const char delimiter = ' ';
+
 void setup() {
   Serial.begin(115200);
   while (!Serial);
@@ -19,6 +21,7 @@ void setup() {
   CAN.setClockFrequency(CAN_CKFR);
   CAN.setSPIFrequency(CAN_SPIFR);
   CAN.setPins(CS);
+  pinMode(LED_BUILTIN, OUTPUT);
 
   // start the CAN bus at 250 kbps
   if (!CAN.begin(250E3)) {
@@ -49,15 +52,15 @@ void canRecieve() {
     }
 
     // Padding after the can ID for unequivocally decodable messages
-    Serial.print(" ");
+    Serial.print(delimiter);
     Serial.print(CAN.packetId(), HEX);
-    Serial.print(" ");
+    Serial.print(delimiter);
 
     if (CAN.packetRtr()) {
       Serial.println(CAN.packetDlc());
     } else {
       Serial.print(packetSize);
-      Serial.print(" ");
+      Serial.print(delimiter);
       while (CAN.available()) {
         Serial.print((char)CAN.read());
       }
@@ -67,17 +70,14 @@ void canRecieve() {
   } 
 }
 
-void canSendMsg() {
-
-  String msg = Serial.readString(); // ID-extended-RTR-message
-
+void canSendPacket(String msg) {
   String split[4];
   String substring = "";
   int currIndex = 0; 
 
   // Split the message by the '-' characters
-  for(unsigned int i = 0; i <= msg.length(); i++){
-    if(msg[i] == '-' || i == msg.length()){
+  for(unsigned int i = 0; i < msg.length(); i++){
+    if(msg[i] == delimiter || i == msg.length()){
 	    split[currIndex] = substring;
 	    currIndex++;
 	    substring = "";
@@ -91,21 +91,18 @@ void canSendMsg() {
   int RTR = split[2].toInt();
   String message = split[4];
 
-  if(Extended == 0)
-  {
-      CAN.beginPacket(packetID,8,RTR);
-      for(unsigned int i=0; i < message.length();i++){
-          CAN.write(message[i]);
+  if(Extended == 0) {
+    CAN.beginPacket(packetID, message.length(), RTR);
+    for(unsigned int i=0; i < message.length();i++) {
+        CAN.write(message[i]);
+    }
+    CAN.endPacket();
+  } else if(Extended == 1) {
+    CAN.beginExtendedPacket(packetID,8,RTR);
+    for(unsigned int i=0; i < message.length();i++) {
+        CAN.write(message[i]);
       }
-      CAN.endPacket();
-  }
-  else if(Extended == 1)
-  {
-      CAN.beginExtendedPacket(packetID,8,RTR);
-      for(unsigned int i=0; i < message.length();i++){
-          CAN.write(message[i]);
-        }
-      CAN.endPacket();
+    CAN.endPacket();
   }
 }
 
@@ -142,31 +139,34 @@ void sendTestMessage3() {
 void canTest() {
   sendTestMassage1();
   canRecieve();
-  delay(200);
+  delay(4000);
   sendTestMassage2();
   canRecieve();
-  delay(200);
+  delay(6000);
   sendTestMessage3();
   canRecieve();
-  delay(200);
+  delay(5000);
 }
 
 void canBusMonitor() {
-  while(Serial.readString() != "exit") {
-    canRecieve();
-    // canTest();
+  while(!Serial.available() || Serial.readString() != "exit") {
+    canTest();
+    if(CAN.available()) {
+      canRecieve();
+    }
   }
 }
 
 void loop() {
-  String msg;
   if(Serial.available()) {
+    String msg;
     msg = Serial.readString();
-  }
-
-  if(msg == "monitor") {
-    canBusMonitor();
-  } else if(msg = "send") {
-    canSendMsg();
+  
+    if(msg == "monitor") {
+      canBusMonitor();
+    } else if(msg = "send") {
+      String packet = Serial.readString();
+      canSendPacket(packet);
+    }
   }
 }
