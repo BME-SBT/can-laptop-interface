@@ -81,7 +81,7 @@ void canSendPacket() {
   int packetID = split[0].toInt();
   int Extended = split[1].toInt();
   int RTR = split[2].toInt();
-  String message = split[4];
+  String message = split[3];
 
   if(Extended == 0) {
     CAN.beginPacket(packetID, message.length(), RTR);
