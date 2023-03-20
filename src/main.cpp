@@ -4,14 +4,21 @@
 #include <CAN.h>
 #include <string>
 
+#define MISO 16 // Master in slave out
+#define MOSI 19 // Master out slave in
+#define SCK 18 // Serial clock
+#define CS 17 // Serial chip select
+#define CAN_CKFR 8E6 // Can clock frequency
+#define CAN_SPIFR 250E4 // Can SPI frequency
+
 void setup() {
   Serial.begin(115200);
   while (!Serial);
 
-  SPI = MbedSPI(16,19,18);
-  CAN.setClockFrequency(8E6);
-  CAN.setSPIFrequency(250E4);
-  CAN.setPins(17);
+  SPI = MbedSPI(MISO, MOSI, SCK);
+  CAN.setClockFrequency(CAN_CKFR);
+  CAN.setSPIFrequency(CAN_SPIFR);
+  CAN.setPins(CS);
 
   // start the CAN bus at 250 kbps
   if (!CAN.begin(250E3)) {
@@ -68,17 +75,14 @@ void canSendMsg() {
   String substring = "";
   int currIndex = 0; 
 
-  for(unsigned int i=0; i <=msg.length();i++)
-  {
-    if(msg[i]=='-'|| i == msg.length())
-    {
-	split[currIndex] = substring;
-	currIndex++;
-	substring = "";
-    }
-    else
-    {
-	substring = substring + msg[i];
+  // Split the message by the '-' characters
+  for(unsigned int i = 0; i <= msg.length(); i++){
+    if(msg[i] == '-' || i == msg.length()){
+	    split[currIndex] = substring;
+	    currIndex++;
+	    substring = "";
+    }else{
+	    substring = substring + msg[i];
     }
   }
 
