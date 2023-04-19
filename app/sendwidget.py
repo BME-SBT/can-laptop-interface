@@ -3,9 +3,9 @@ from PySide6.QtGui import *
 from PySide6.QtCore import *
 from scrolllabel import ScrollLabel
 import serial
-from datetime import datetime
 import serial.tools.list_ports
 import time
+from struct import *
 
 class SendWidget(QWidget):
 
@@ -14,6 +14,7 @@ class SendWidget(QWidget):
 
         self.app = app
         self.ser = None
+        self.sendStart = time.time()
 
         send_layout = QVBoxLayout()
 
@@ -26,13 +27,10 @@ class SendWidget(QWidget):
 
         label_id = QLabel("Id: ")
         self.lineedit_id = QLineEdit()
-        # self.list_id.setEchoMode(QLineEdit.NoEcho)
+        label_dlc = QLabel("Dlc: ")
+        self.lineedit_dlc = QLineEdit()
         label_message = QLabel("Message: ")
         self.lineedit_message = QLineEdit()
-        #self.lineedit_message.setEchoMode(QLineEdit.NoEcho)
-
-        self.check_extended = QCheckBox("extended")
-        self.check_rtr = QCheckBox("RTR")
 
         btn_port = QPushButton("Send")
         btn_port.clicked.connect(self.port_number_button)
@@ -61,8 +59,8 @@ class SendWidget(QWidget):
         send_layout.addWidget(self.lineedit_port)
         send_layout.addWidget(label_id)
         send_layout.addWidget(self.lineedit_id)
-        send_layout.addWidget(self.check_extended)
-        send_layout.addWidget(self.check_rtr)
+        send_layout.addWidget(label_dlc)
+        send_layout.addWidget(self.lineedit_dlc)
         send_layout.addWidget(label_message)
         send_layout.addWidget(self.lineedit_message)
         send_layout.addWidget(btn_port)
@@ -73,46 +71,47 @@ class SendWidget(QWidget):
         self.setLayout(send_layout)
 
     def port_number_button(self):
-        newMsg = self.lineedit_message.text()
-        if len(newMsg) > 8:
-            self.write_error("Maximum message length is 8 characters!")
-        else:
-            try:
-                usb = self.lineedit_port.text()
-                self.ser = serial.Serial(usb, 115200)
-                self.ser.write('send'.encode('utf-8'))
-                time.sleep(0.01)
-                self.sendPacket()
-            except serial.SerialException:
-                self.write_error("Invalid port added!")
+        try:
+            usb = self.lineedit_port.text()
+            self.ser = serial.Serial(usb, 115200)
+            # self.ser = serial.serial_for_url('loop://', timeout=1) # loopback for testing
+            self.sendPacket()
+        except serial.SerialException:
+            self.write_error("Invalid port added!")
     
     def sendPacket(self):
-        printMsg = " Sent "
-        canMsg = ""
+        printMsg = ""
         msg = self.lineedit_message.text()
-        delimiter = ' '
+        ser = self.ser
 
-        if self.check_extended.checkState():
-            printMsg += "extended "
-            canMsg += "1" + delimiter
+        # Chechwether the id is valid
+        id = int(self.lineedit_id.text())
+        dlc = int(self.lineedit_dlc.text())
+        # More profound validaion i the future
+        if id > int("0xFFFFFFFF", base=16):
+            self.write_error("Invalid id!")
         else:
-            canMsg += "0" + delimiter
+            if len(msg) > dlc:
+                self.write_error("Message is too long!")
+            else:
+                if dlc > 8:
+                    self.write_error("DLC is must be between 0 and 8!")
+                else:
+                    ser.write(b'\xAA') #start of rame: 1 byte
+                    timestamp = int((time.time() - self.sendStart) * 1000)
+                    ser.write(pack('<I', timestamp)) #time stamp
+                    ser.write(pack('<B', dlc))
+                    ser.write(bytes(msg.encode('utf-8')))
+                    ser.write(b'\xBB')
+                    printMsg += f'Sent package with timestamp: {timestamp} and with the id: {id} and length: {dlc}\n{msg}\n\n'
 
-        if self.check_rtr.checkState():
-            printMsg += "RTR "
-            canMsg += "1" + delimiter
-        else:
-            canMsg += "0" + delimiter
+        # while ser.in_waiting:   # print bytes to console for testing
+        #     print(ser.read())
 
-        canMsg += self.lineedit_id.text() + delimiter + msg
-        self.ser.write(canMsg.encode('utf-8'))
-        self.ser.close()
-        self.ser = None
-
-        now = datetime.now()
-        current_time = now.strftime("%H:%M:%S")
-        printMsg += "packet with the id " + self.lineedit_id.text() + " and length " + str(len(self.lineedit_message.text())) + ":\n" + msg + "\n\n"
-        self.sent_messages += current_time + printMsg
+        ser.close()
+        ser = None
+        
+        self.sent_messages += printMsg
         self.scrolllabel.setText(self.sent_messages)
 
 

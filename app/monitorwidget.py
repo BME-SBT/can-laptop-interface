@@ -87,8 +87,7 @@ class MonitorWidget(QWidget):
         try:
             usb = self.lineedit_port.text()
             self.ser = serial.Serial(usb, 115200)
-            self.ser.write('monitor'.encode('utf-8'))
-            # self.ser = serial.serial_for_url('loop://', timeout=1)
+            # self.ser = serial.serial_for_url('loop://', timeout=1) # loopback for testing with test message
             # ser = self.ser
             # ser.write(b'\xAA')
             # ser.write(b'\x66\x73\x00\x00')
