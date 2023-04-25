@@ -10,8 +10,7 @@
 #define CS 17 // Serial chip select
 #define CAN_CKFR 8E6 // Can clock frequency
 #define CAN_SPIFR 250E4 // Can SPI frequency
-
-const char delimiter = ' ';
+#define SOF 170
 
 void setup() {
   Serial.begin(115200);
@@ -71,34 +70,15 @@ void canRecieve() {
 }
 
 void canSendPacket() {
-  String split[4];
-
-  // Split the message by the '-' characters
-  for(unsigned int i = 0; i < 4; i++){
-    split[i] = Serial.readStringUntil(delimiter);
+  int timestamp;
+  int arb_id;
+  int dlc;
+  int payload;
+  if(Serial.read() == SOF) {
+    for(int i = 0; i < 4; ++i) {
+      
+    } 
   }
-
-  int packetID = split[0].toInt();
-  int Extended = split[1].toInt();
-  int RTR = split[2].toInt();
-  String message = split[3];
-
-  if(Extended == 0) {
-    CAN.beginPacket(packetID, message.length(), RTR);
-    for(unsigned int i=0; i < message.length();i++) {
-        CAN.write(message[i]);
-    }
-    CAN.endPacket();
-  } else if(Extended == 1) {
-    CAN.beginExtendedPacket(packetID,8,RTR);
-    for(unsigned int i=0; i < message.length();i++) {
-        CAN.write(message[i]);
-      }
-    CAN.endPacket();
-  }
-  // digitalWrite(LED_BUILTIN, HIGH); teszteléshez
-  // delay(100);
-  // digitalWrite(LED_BUILTIN, LOW);
 }
 
 void sendTestMassage1() {
