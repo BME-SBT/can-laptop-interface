@@ -10,7 +10,8 @@
 #define CS 17 // Serial chip select
 #define CAN_CKFR 8E6 // Can clock frequency
 #define CAN_SPIFR 250E4 // Can SPI frequency
-#define SOF 170
+#define SOFR 170 // Start of frame on can over serial
+#define EOFR 187 // End of frame on can over serial
 
 void setup() {
   Serial.begin(115200);
@@ -32,52 +33,45 @@ void setup() {
 }
 
 void canRecieve() {
-    // try to parse packet
-  int packetSize = CAN.parsePacket();
+  unsigned char packetSize = CAN.parsePacket();
 
   if (packetSize || CAN.packetId() != -1) {
-
-    if (CAN.packetExtended()) {
-      Serial.print("1");
-    } else {
-      Serial.print("0");
+    Serial.print(SOFR);
+    Serial.print("\0\0\0\0"); // TIMESTAMP?? 
+    Serial.print(CAN.packetDlc());
+    Serial.print(CAN.packetId());
+    unsigned char c = '\0';
+    while(CAN.available()) {
+      Serial.print(CAN.read());
     }
-
-    if (CAN.packetRtr()) {
-      // Remote transmission request, packet contains no data
-      Serial.print("1");
-    } else {
-      Serial.print("0");
-    }
-
-    // Padding after the can ID for unequivocally decodable messages
-    Serial.print(delimiter);
-    Serial.print(CAN.packetId(), HEX);
-    Serial.print(delimiter);
-
-    if (CAN.packetRtr()) {
-      Serial.println(CAN.packetDlc());
-    } else {
-      Serial.print(packetSize);
-      Serial.print(delimiter);
-      while (CAN.available()) {
-        Serial.print((char)CAN.read());
-      }
-    }
-
-    Serial.println();
-  } 
+  }
 }
 
 void canSendPacket() {
-  int timestamp;
-  int arb_id;
-  int dlc;
-  int payload;
-  if(Serial.read() == SOF) {
+  int timestamp = 0;
+  int dlc = 0;
+  int arb_id = 0;
+  char payload[8];
+  if(Serial.read() == SOFR) {
     for(int i = 0; i < 4; ++i) {
-      
-    } 
+      timestamp += Serial.read() << i;
+    }
+    dlc = Serial.read();
+    for(int i = 0; i < 4; ++i) {
+      arb_id += Serial.read() << i;
+    }
+    for(int i = 0; i < dlc; ++i) {
+      payload[i] = Serial.read();
+    }
+    if(Serial.read() != EOFR) {
+      // HIBA TODO
+    }
+
+    // Becsomagolás és továbbküldés
+    CAN.beginExtendedPacket(arb_id, dlc, false);
+    for(int i = 0; i < dlc; ++i) {
+      CAN.write(payload[i]);
+    }
   }
 }
 
@@ -137,10 +131,7 @@ void loop() {
     String msg;
     msg = Serial.readString();
   
-    if(msg == "monitor") {
-      canBusMonitor();
-    } else if(msg = "send") {
-      canSendPacket();
-    }
+    canSendPacket();
+    canRecieve();
   }
 }
