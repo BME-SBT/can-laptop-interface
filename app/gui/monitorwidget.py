@@ -1,7 +1,8 @@
 from PySide6.QtWidgets import *
 from PySide6.QtGui import *
 from PySide6.QtCore import *
-from scrolllabel import ScrollLabel
+from gui.scrolllabel import ScrollLabel
+from data.sensor import Sensor
 import serial
 from datetime import datetime
 import serial.tools.list_ports
@@ -61,19 +62,17 @@ class MonitorWidget(QWidget):
         self.setLayout(monitor_layout)
 
     def message_reader(self):
-        ser = self.ser 
+        ser = self.ser
+        sensor: Sensor
         if ser.read(1) == (b'\xAA'): 
             timestamp = unpack("<I", ser.read(4))
-            print(timestamp[0])
             dlc = unpack("<B", ser.read(1))
-            print(dlc[0])
             id = unpack("<I", ser.read(4))
-            print(id[0])
+            # TODO id alapján sensor neve + data_type
+            
             payload = []
             payload = ser.read(int(dlc[0])).hex()
-            print(payload)
             end_of_frame = ser.read(1)
-            print(end_of_frame.hex())
         else:
             self.write_error("Wrong package on serial")
 
@@ -122,9 +121,9 @@ class MonitorWidget(QWidget):
         self.app.main_layout.setCurrentIndex(0)
         self.received_messages = "Recieved messages:\n\n"
         self.scrolllabel.setText(self.received_messages)
-        self.ser.write('exit'.encode('utf-8'))
-        self.ser.close()
-        self.ser = None
+        if 'ser' in locals():
+            self.ser.close()
+            self.ser = None
         self.monitor_running = False
 
     def UiComponents(self): 

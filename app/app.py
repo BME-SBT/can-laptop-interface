@@ -1,8 +1,8 @@
 from PySide6.QtWidgets import *
 from PySide6.QtGui import *
 from PySide6.QtCore import *
-from monitorwidget import MonitorWidget
-from sendwidget import SendWidget
+from gui.monitorwidget import MonitorWidget
+from gui.sendwidget import SendWidget
 import sys
 
 class MainWindow(QMainWindow):

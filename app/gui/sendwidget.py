@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import *
 from PySide6.QtGui import *
 from PySide6.QtCore import *
-from scrolllabel import ScrollLabel
+from gui.scrolllabel import ScrollLabel
 import serial
 import serial.tools.list_ports
 import time
