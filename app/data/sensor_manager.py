@@ -3,6 +3,7 @@ from data_types import *
 
 class SensorManager:
     sensors = {
+        # Protocol created by the legend Márk Bakonyi
         00000010101: Sensor(00000010101, THROTTLE_POSITION, "Throttle position"),
         00000110101: Sensor(00000110101, SWITCH_POSITION, "Switch positions(motor & dead mans's)"),
         00001010010: Sensor(00001010010, RPM, "Motor RPM"),
