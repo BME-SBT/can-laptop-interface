@@ -2,6 +2,7 @@ from PySide6.QtWidgets import *
 from PySide6.QtGui import *
 from PySide6.QtCore import *
 from gui.scrolllabel import ScrollLabel
+from data.sensor_manager import SensorManager
 import serial
 import serial.tools.list_ports
 import time
@@ -14,7 +15,8 @@ class SendWidget(QWidget):
 
         self.app = app
         self.ser = None
-        self.sendStart = time.time()
+        self.send_start = time.time()
+        self.sensor_manager = SensorManager()
 
         send_layout = QVBoxLayout()
 
@@ -26,11 +28,13 @@ class SendWidget(QWidget):
         self.lineedit_port = QLineEdit()
 
         label_id = QLabel("Id: ")
-        self.lineedit_id = QLineEdit()
-        label_dlc = QLabel("Dlc: ")
-        self.lineedit_dlc = QLineEdit()
+        self.combo_id = QComboBox()
+        for key in self.sensor_manager.sensors:
+            self.combo_id.addItem(self.sensor_manager.sensors[key].name)
+        self.combo_id.currentIndexChanged.connect(self.update_measure)
         label_message = QLabel("Message: ")
         self.lineedit_message = QLineEdit()
+        self.label_measure = QLabel("")
 
         btn_port = QPushButton("Send")
         btn_port.clicked.connect(self.port_number_button)
@@ -58,11 +62,10 @@ class SendWidget(QWidget):
         send_layout.addWidget(label_port)
         send_layout.addWidget(self.lineedit_port)
         send_layout.addWidget(label_id)
-        send_layout.addWidget(self.lineedit_id)
-        send_layout.addWidget(label_dlc)
-        send_layout.addWidget(self.lineedit_dlc)
+        send_layout.addWidget(self.combo_id)
         send_layout.addWidget(label_message)
         send_layout.addWidget(self.lineedit_message)
+        send_layout.addWidget(self.label_measure)
         send_layout.addWidget(btn_port)
         send_layout.addWidget(self.scrolllabel)
         send_layout.addWidget(self.btn_back)
@@ -114,7 +117,10 @@ class SendWidget(QWidget):
         self.sent_messages += printMsg
         self.scrolllabel.setText(self.sent_messages)
 
-
+    def update_measure(self, index):
+        keys = list(self.sensor_manager.sensors.keys())
+        sensor = self.sensor_manager.sensors[keys[index]]
+        self.label_measure.setText(sensor.data_type.get_measure())
 
     def hide_error(self):
         self.label_error.hide()

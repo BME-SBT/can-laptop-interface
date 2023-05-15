@@ -26,6 +26,9 @@ class DataType:
 
     def to_raw(self, value):
         return struct.pack(self.number_type.value, int((value / self.resolution)))
+    
+    def get_measure(self):
+        return f"{self.unit}"
 
 
 RPM = DataType(NumberType.SHORT, 1, '1/min')

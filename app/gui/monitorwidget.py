@@ -2,7 +2,9 @@ from PySide6.QtWidgets import *
 from PySide6.QtGui import *
 from PySide6.QtCore import *
 from gui.scrolllabel import ScrollLabel
-from data.sensor import Sensor
+from data.data_types import *
+from data.sensor import *
+from data.sensor_manager import *
 import serial
 from datetime import datetime
 import serial.tools.list_ports
@@ -15,6 +17,7 @@ class MonitorWidget(QWidget):
         QWidget.__init__(self)
 
         self.app = app
+        self.sensor_manager = SensorManager()
         
         monitor_layout = QVBoxLayout()
 
@@ -66,34 +69,32 @@ class MonitorWidget(QWidget):
         sensor: Sensor
         if ser.read(1) == (b'\xAA'): 
             timestamp = unpack("<I", ser.read(4))
-            dlc = unpack("<B", ser.read(1))
-            id = unpack("<I", ser.read(4))
-            # TODO id alapján sensor neve + data_type
-            
-            payload = []
-            payload = ser.read(int(dlc[0])).hex()
+            dlc = unpack("<B", ser.read(1))[0]
+            id = unpack("<I", ser.read(4))[0]
+            sensor = SensorManager.sensors[id]
+            payload = sensor.form_messagge(ser.read(int(dlc)))
             end_of_frame = ser.read(1)
         else:
             self.write_error("Wrong package on serial")
 
         if end_of_frame != None:
             if end_of_frame == b'\xBB':
-                return f'Recieved package with the timestamp: {timestamp[0]} and with the id: {id[0]} and length {dlc[0]}:\n {payload}\n\n'
+                return f'Recieved package with the timestamp: {timestamp[0]} from the sensor: {sensor.name} with the id: {sensor.id} and length {dlc}:\n {payload}\n\n'
             else:
-                print("Wrong package on serial")
+                return "Wrong package on serial"
 
     def port_number_button(self):
         try:
-            usb = self.lineedit_port.text()
-            self.ser = serial.Serial(usb, 115200)
-            # self.ser = serial.serial_for_url('loop://', timeout=1) # loopback for testing with test message
-            # ser = self.ser
-            # ser.write(b'\xAA')
-            # ser.write(b'\x66\x73\x00\x00')
-            # ser.write(b'\x08')
-            # ser.write(b'\x01\x00\x00\x00')
-            # ser.write(b'\x11\x22\x33\x44\x55\x66\x77\x88')
-            # ser.write(b'\xBB')
+            # usb = self.lineedit_port.text()
+            # self.ser = serial.Serial(usb, 115200)
+            self.ser = serial.serial_for_url('loop://', timeout=1) # loopback for testing with test message
+            ser = self.ser
+            ser.write(b'\xAA')
+            ser.write(b'\x66\x73\x00\x00')
+            ser.write(b'\x02')
+            ser.write(b'\x05\x02\x00\x00')
+            ser.write(b'\x01\x03')
+            ser.write(b'\xBB')
             self.monitor_running = True
         except serial.SerialException:
             self.write_error("Invalid port added!")
@@ -112,8 +113,7 @@ class MonitorWidget(QWidget):
         if self.monitor_running == True:
             if self.ser.in_waiting:
                 now = datetime.now()
-                current_time = now.strftime("%H:%M:%S")
-                new_message = current_time + ' ' + self.message_reader() + '\n'
+                new_message = self.message_reader()
                 self.received_messages += new_message
                 self.scrolllabel.setText(self.received_messages)
     

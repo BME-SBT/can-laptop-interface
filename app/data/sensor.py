@@ -9,4 +9,4 @@ class Sensor:
 
     def form_messagge(self, data):
         retData = self.data_type.get_text_value(data)
-        return
+        return retData
