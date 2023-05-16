@@ -13,6 +13,9 @@
 #define SOFR 170 // Start of frame on can over serial
 #define EOFR 187 // End of frame on can over serial
 
+char bufferIn[8];
+char bufferOut[8];
+
 void setup() {
   Serial.begin(115200);
   while (!Serial);
@@ -32,46 +35,70 @@ void setup() {
   CAN.loopback();
 }
 
+// makes the littleEndian  inBuffer's value to big endian in outbuffer
+void bigToLittleEndian(int length) {
+  for(int i = 0; i < length; ++i) {
+    bufferOut[i]  = bufferIn[length - 1 - i];
+  }
+}
+
+void littleToBigEndian(int length) {
+  for(int i = 0; i < length; ++i) {
+    bufferOut[length - 1 - i] = bufferIn[i];
+  }
+}
+
+// Prints length character of the bufferOut to the serial
+void printBufferToSerial(int length) {
+  for (int i = 0; i < length; i++) {
+    Serial.print(bufferOut[i]);
+  }
+  
+}
+
+int bufferOutToIntAsBigEndian(int length) {
+  int ret = 0;
+  for(int i = 0; i < length; ++i) {
+    ret += bufferOut[i] << 8 * i;
+  }
+  return ret;
+}
+
 void canRecieve() {
   unsigned char packetSize = CAN.parsePacket();
 
   if (packetSize || CAN.packetId() != -1) {
     Serial.print(SOFR);
-    Serial.print("\0\0\0\0"); // TIMESTAMP?? 
-    Serial.print(CAN.packetDlc());
-    Serial.print(CAN.packetId());
-    unsigned char c = '\0';
-    while(CAN.available()) {
-      Serial.print(CAN.read());
-    }
+    Serial.print("\0\0\0\0"); // TIMESTAMP, not interpreted
+    unsigned char dlc = CAN.packetDlc();
+    Serial.print(dlc);
+    // read id
+    CAN.readBytes(bufferIn, 4);
+    // print it on serial as little-endian
+    bigToLittleEndian(4);
+    printBufferToSerial(4);
+    // read payload
+    CAN.readBytes(bufferIn, dlc);
+    bigToLittleEndian(dlc);
+    printBufferToSerial(dlc);
+    Serial.print(EOFR);
   }
 }
 
 void canSendPacket() {
-  int timestamp = 0;
-  int dlc = 0;
-  int arb_id = 0;
-  char payload[8];
   if(Serial.read() == SOFR) {
-    for(int i = 0; i < 4; ++i) {
-      timestamp += Serial.read() << i;
-    }
-    dlc = Serial.read();
-    for(int i = 0; i < 4; ++i) {
-      arb_id += Serial.read() << i;
-    }
-    for(int i = 0; i < dlc; ++i) {
-      payload[i] = Serial.read();
-    }
-    if(Serial.read() != EOFR) {
-      // HIBA TODO
-    }
-
-    // Becsomagolás és továbbküldés
+    unsigned int timeStamp = Serial.readBytes(bufferIn, 4); // TIMESTAMP, not used in our CAN protocol interpreted as a little-endian value
+    unsigned int dlc = Serial.read();
+    Serial.readBytes(bufferIn, 4);
+    littleToBigEndian(4);
+    int arb_id = bufferOutToIntAsBigEndian(4);
     CAN.beginExtendedPacket(arb_id, dlc, false);
+    Serial.readBytes(bufferIn, dlc);
+    littleToBigEndian(dlc);
     for(int i = 0; i < dlc; ++i) {
-      CAN.write(payload[i]);
+      CAN.write(bufferOut[i]);
     }
+    CAN.endPacket();
   }
 }
 
@@ -117,21 +144,11 @@ void canTest() {
   delay(5000);
 }
 
-void canBusMonitor() {
-  while(!Serial.available() || Serial.readString() != "exit") {
-    canTest();
-    if(CAN.available()) {
-      canRecieve();
-    }
-  }
-}
-
 void loop() {
-  if(Serial.available()) {
-    String msg;
-    msg = Serial.readString();
-  
+  if(Serial.available()) {  
     canSendPacket();
+  }
+  if(CAN.available()) {
     canRecieve();
   }
 }
