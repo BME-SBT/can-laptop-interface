@@ -17,6 +17,7 @@ class SendWidget(QWidget):
         self.ser = None
         self.send_start = time.time()
         self.sensor_manager = SensorManager()
+        self.sensor = self.sensor_manager.sensors.get(517)
 
         send_layout = QVBoxLayout()
 
@@ -75,52 +76,52 @@ class SendWidget(QWidget):
 
     def port_number_button(self):
         try:
-            usb = self.lineedit_port.text()
-            self.ser = serial.Serial(usb, 115200)
-            # self.ser = serial.serial_for_url('loop://', timeout=1) # loopback for testing
+            # usb = self.lineedit_port.text()
+            # self.ser = serial.Serial(usb, 115200)
+            if self.ser is None:
+                self.ser = serial.serial_for_url('loop://', timeout=1) # loopback for testing
             self.sendPacket()
         except serial.SerialException:
             self.write_error("Invalid port added!")
     
     def sendPacket(self):
-        printMsg = ""
-        msg = self.lineedit_message.text()
-        ser = self.ser
+        printMsg = "" # message printed on the gui
+        msgInBytes = b''
+        # try parsing the message
+        try:
+            start_of_frame = b'\xAA'
+            msgInBytes += start_of_frame
+            timestamp = pack('<i', (int(time.time() - self.send_start)))
+            msgInBytes += timestamp
+            print(timestamp)
+            dlc = pack('<B', int(self.sensor.data_type.dlc))
+            id = pack('<i', int(self.sensor.id))
+            print(id)
+            payload = self.sensor.data_type.to_raw(int(self.lineedit_message.text()))
+            msgInBytes += payload
+            end_of_frame = b'\xBB'
+            msgInBytes += end_of_frame
+            self.ser.write(start_of_frame)
+            self.ser.write(timestamp)
+            self.ser.write(dlc)
+            self.ser.write(id)
+            self.ser.write(payload)
+            self.ser.write(end_of_frame)
+            printMsg = f'Sent package with the timestamp: {timestamp[0]} from the sensor: {self.sensor.name} with the id: {self.sensor.id} and length {self.sensor.data_type.dlc} and message {self.lineedit_message.text()}:\n{msgInBytes}\n\n'
+        except:
+            self.write_error("Couldn't parse packet, message might be out of range!")
 
-        # Chechwether the id is valid
-        id = int(self.lineedit_id.text())
-        dlc = int(self.lineedit_dlc.text())
-        # More profound validaion i the future
-        if id > int("0xFFFFFFFF", base=16):
-            self.write_error("Invalid id!")
-        else:
-            if len(msg) > dlc:
-                self.write_error("Message is too long!")
-            else:
-                if dlc > 8:
-                    self.write_error("DLC is must be between 0 and 8!")
-                else:
-                    ser.write(b'\xAA') #start of rame: 1 byte
-                    timestamp = int((time.time() - self.sendStart) * 1000)
-                    ser.write(pack('<I', timestamp)) #time stamp
-                    ser.write(pack('<B', dlc))
-                    ser.write(bytes(msg.encode('utf-8')))
-                    ser.write(b'\xBB')
-                    printMsg += f'Sent package with timestamp: {timestamp} and with the id: {id} and length: {dlc}\n{msg}\n\n'
-
-        # while ser.in_waiting:   # print bytes to console for testing
-        #     print(ser.read())
-
-        ser.close()
-        ser = None
+        # self.ser.close()
+        # self.ser = None
         
         self.sent_messages += printMsg
         self.scrolllabel.setText(self.sent_messages)
 
     def update_measure(self, index):
         keys = list(self.sensor_manager.sensors.keys())
-        sensor = self.sensor_manager.sensors[keys[index]]
-        self.label_measure.setText(sensor.data_type.get_measure())
+        self.sensor = self.sensor_manager.sensors[keys[index]]
+        self.id = self.sensor.id
+        self.label_measure.setText(self.sensor.data_type.get_measure())
 
     def hide_error(self):
         self.label_error.hide()

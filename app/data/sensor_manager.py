@@ -35,7 +35,7 @@ class SensorManager:
         737: Sensor(737, MCURRENT, "MPPT charge current 4"),
         745: Sensor(745, MCURRENT, "MPPT charge current 5"),
         753: Sensor(753, MCURRENT, "MPPT charge current 6"),
-        762: Sensor(762, CURRENT, "Motor controller current"), #EZ
+        762: Sensor(762, CURRENT, "Motor controller current"),
         770: Sensor(770, RPM, "Gearbox RPM"),
         778: Sensor(778, POWER, "Motor Power(W)"),
         788: Sensor(788, LEVEL, "Coolant level"),
@@ -44,13 +44,13 @@ class SensorManager:
         810: Sensor(810, TEMPERATURE, "Motorbox air temperature"),
         823: Sensor(823, TEMPERATURE, "Telemetrybox air temperature"),
         828: Sensor(828, TEMPERATURE, "Ambient temperature"),
-        836: Sensor(836, HEADING, "GPS time"), #EZ
-        849: Sensor(849, ABSOLUTTIME, "RTC time"), #EZ
+        836: Sensor(836, ABSOLUTTIME, "GPS time"),
+        849: Sensor(849, ABSOLUTTIME, "RTC time"),
         852: Sensor(852, FLOW, "Coolant flow"),
-        858: Sensor(858, DISTANCE, "Motor vibration"), #EZ
+        858: Sensor(858, ACCELERATION, "Motor vibration"),
         868: Sensor(868, SPEED, "GPS speed"),
         876: Sensor(876, GPS_POSITION, "GPS position"),
-        884: Sensor(884, ROLL_PITCH_DEGREE, "Roll"), #EZ
+        884: Sensor(884, ROLL_PITCH_DEGREE, "Roll"),
         892: Sensor(892, ROLL_PITCH_DEGREE, "Pitch"),
         900: Sensor(900, HEADING, "GPS heading"),
         908: Sensor(908, HEADING, "Magnetic heading"),

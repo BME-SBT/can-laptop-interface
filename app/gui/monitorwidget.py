@@ -67,21 +67,26 @@ class MonitorWidget(QWidget):
     def message_reader(self):
         ser = self.ser
         sensor: Sensor
-        if ser.read(1) == (b'\xAA'): 
-            timestamp = unpack("<I", ser.read(4))
-            dlc = unpack("<B", ser.read(1))[0]
-            id = unpack("<I", ser.read(4))[0]
-            sensor = SensorManager.sensors[id]
-            payload = sensor.form_messagge(ser.read(int(dlc)))
-            end_of_frame = ser.read(1)
-        else:
-            self.write_error("Wrong package on serial")
-
-        if end_of_frame != None:
-            if end_of_frame == b'\xBB':
-                return f'Recieved package with the timestamp: {timestamp[0]} from the sensor: {sensor.name} with the id: {sensor.id} and length {dlc}:\n {payload}\n\n'
+        try:
+            if ser.read(1) == (b'\xAA'): 
+                timestamp = unpack("<I", ser.read(4))
+                dlc = unpack("<B", ser.read(1))[0]
+                id = unpack("<I", ser.read(4))[0]
+                sensor = SensorManager.sensors[id]
+                payload = sensor.form_messagge(ser.read(int(dlc)))
+                end_of_frame = ser.read(1)
             else:
-                return "Wrong package on serial"
+                self.write_error("Wrong package on serial")
+
+            if end_of_frame != None:
+                if end_of_frame == b'\xBB':
+                    return f'Recieved package with the timestamp: {timestamp[0]} from the sensor: {sensor.name} with the id: {sensor.id} and length {dlc}:\n {payload}\n\n'
+                else:
+                    self.write_error("Wrong package on serial")
+                    return ""
+        except:
+            self.write_error("Wrong package on serial")
+            return ""
 
     def port_number_button(self):
         try:
@@ -93,7 +98,7 @@ class MonitorWidget(QWidget):
             ser.write(b'\x66\x73\x00\x00')
             ser.write(b'\x02')
             ser.write(b'\x05\x02\x00\x00')
-            ser.write(b'\x01\x03')
+            ser.write(b'\x01')
             ser.write(b'\xBB')
             self.monitor_running = True
         except serial.SerialException:
@@ -110,9 +115,8 @@ class MonitorWidget(QWidget):
         self.label_error.hide()
         
     def monitoring(self):
-        if self.monitor_running == True:
+        while self.monitor_running == True:
             if self.ser.in_waiting:
-                now = datetime.now()
                 new_message = self.message_reader()
                 self.received_messages += new_message
                 self.scrolllabel.setText(self.received_messages)

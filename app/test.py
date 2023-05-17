@@ -31,12 +31,12 @@ ser = serial.serial_for_url('loop://', timeout=1)
 #     else:
 #         print("something went wrong")
 
-print(pack('<I', 123012))
-print(int("0XFF", base=16))
+# print(pack('<I', 123012))
+# print(int("0XFF", base=16))
 
-time1 = time.time()
+# time1 = time.time()
 
-time.sleep(1.5)
-timestamp = int((time.time() - time1) * 1000)
-print(timestamp)
-print(pack('<I', timestamp))
+# time.sleep(1.5)
+# timestamp = int((time.time() - time1) * 1000)
+# print(timestamp)
+# print(pack('<I', timestamp))
