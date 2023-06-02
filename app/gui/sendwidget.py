@@ -93,10 +93,8 @@ class SendWidget(QWidget):
             msgInBytes += start_of_frame
             timestamp = pack('<i', (int(time.time() - self.send_start)))
             msgInBytes += timestamp
-            print(timestamp)
             dlc = pack('<B', int(self.sensor.data_type.dlc))
             id = pack('<i', int(self.sensor.id))
-            print(id)
             payload = self.sensor.data_type.to_raw(int(self.lineedit_message.text()))
             msgInBytes += payload
             end_of_frame = b'\xBB'

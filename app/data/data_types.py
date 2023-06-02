@@ -25,6 +25,7 @@ class DataType:
 
     def get_text_value(self, data):
         val = self.get_value(data)
+        print(val)
         return f"{val} {self.unit}"
 
     def to_raw(self, value):

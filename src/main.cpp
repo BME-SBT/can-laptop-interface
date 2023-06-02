@@ -102,48 +102,6 @@ void canSendPacket() {
   }
 }
 
-void sendTestMassage1() {
-  CAN.beginPacket(0x12);
-  CAN.write('h');
-  CAN.write('e');
-  CAN.write('l');
-  CAN.write('l');
-  CAN.write('o');
-  CAN.endPacket();
-}
-
-void sendTestMassage2() {
-  CAN.beginExtendedPacket(0xabcdef);
-  CAN.write('w');
-  CAN.write('o');
-  CAN.write('r');
-  CAN.write('l');
-  CAN.write('d');
-  CAN.endPacket();
-}
-
-void sendTestMessage3() {
-  CAN.beginExtendedPacket(0x24);
-  CAN.write('D');
-  CAN.write('I');
-  CAN.write('K');
-  CAN.write('K');
-  CAN.write('K');
-  CAN.endPacket();
-}
-
-void canTest() {
-  sendTestMassage1();
-  canRecieve();
-  delay(4000);
-  sendTestMassage2();
-  canRecieve();
-  delay(6000);
-  sendTestMessage3();
-  canRecieve();
-  delay(5000);
-}
-
 void loop() {
   if(Serial.available()) {  
     canSendPacket();

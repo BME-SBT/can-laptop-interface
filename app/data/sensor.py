@@ -8,5 +8,6 @@ class Sensor:
         self.data_type = data_type
 
     def form_messagge(self, data):
+        print(data)
         retData = self.data_type.get_text_value(data)
         return retData
