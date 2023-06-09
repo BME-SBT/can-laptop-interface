@@ -87,7 +87,7 @@ void canRecieve() {
 
 void canSendPacket() {
   if(Serial.read() == SOFR) {
-    unsigned int timeStamp = Serial.readBytes(bufferIn, 4); // TIMESTAMP, not used in our CAN protocol interpreted as a little-endian value
+    Serial.readBytes(bufferIn, 4); // TIMESTAMP, not used in our CAN protocol interpreted as a little-endian value
     unsigned int dlc = Serial.read();
     Serial.readBytes(bufferIn, 4);
     littleToBigEndian(4);
@@ -95,7 +95,7 @@ void canSendPacket() {
     CAN.beginExtendedPacket(arb_id, dlc, false);
     Serial.readBytes(bufferIn, dlc);
     littleToBigEndian(dlc);
-    for(int i = 0; i < dlc; ++i) {
+    for(unsigned int i = 0; i < dlc; ++i) {
       CAN.write(bufferOut[i]);
     }
     CAN.endPacket();
